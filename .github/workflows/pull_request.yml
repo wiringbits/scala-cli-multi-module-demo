@@ -1,0 +1,38 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+concurrency:
+  group: pr-workflow
+  cancel-in-progress: true
+
+permissions:
+ contents: read # for checkout
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: coursier/cache-action@v6
+      - uses: VirtusLab/scala-cli-setup@main
+
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Check code format
+        run: scala-cli fmt --check
+      
+      - name: Run common tests
+        run: scala-cli test common
+
+      - name: Compile module-1
+        run: cd module-1 && ./package.sh
+
+      - name: Compile module-2
+        run: cd module-2 && ./package.sh
+
